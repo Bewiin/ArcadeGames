@@ -27,6 +27,13 @@
 
 <hr class="neon-divider mb-4" />
 
+@if (TempData["MastermindError"] is string errMsg)
+{
+    <div class="mm-alert" style="background:rgba(180,79,255,.1);border:1px solid var(--neon-purple);color:var(--neon-purple);">
+        @errMsg
+    </div>
+}
+
 @if (Model is null)
 {
     <p class="text-center" style="color:var(--text-muted);font-family:'Exo 2',sans-serif;">

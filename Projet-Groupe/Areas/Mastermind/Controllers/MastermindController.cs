@@ -11,6 +11,7 @@ namespace Projet_Groupe.Areas.Mastermind.Controllers;
 public class MastermindController : Controller
 {
     private const string SessionKey = "MastermindState";
+    private const string TempDataError = "MastermindError";
     private readonly IMastermindService _service;
 
     public MastermindController(IMastermindService service) => _service = service;
@@ -34,11 +35,17 @@ public class MastermindController : Controller
             return RedirectToAction(nameof(Index));
 
         if (!ModelState.IsValid)
+        {
+            TempData[TempDataError] = "Sélectionne une couleur pour chaque position.";
             return RedirectToAction(nameof(Index));
+        }
 
         var guess = vm.ToArray();
         if (!guess.All(c => MastermindConstants.AvailableColors.Contains(c)))
+        {
+            TempData[TempDataError] = "Couleur invalide.";
             return RedirectToAction(nameof(Index));
+        }
 
         var result = _service.Evaluate(state.Secret, guess);
         state.History.Add(result);
