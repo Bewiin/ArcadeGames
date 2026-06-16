@@ -24,9 +24,21 @@ public static class GamesCatalog
             Area: "Snake"),
         new GameDescriptor(
             DisplayName: "Tetris Néon",
-            Slug: "tetris",
+            Slug:        "tetris",
             Description: "Le Tetris classique en mode néon. Alignez les lignes, montez les niveaux.",
-            Icon: "🟪",
-            Area: "Tetris"),
+            Icon:        "🟪",
+            Area:        "Tetris"),
+        new GameDescriptor(
+            DisplayName: "Mastermind",
+            Slug:        "mastermind",
+            Description: "Déchiffre le code secret en 10 essais.",
+            Icon:        "🔐",
+            Area:        "Mastermind"),
+        new GameDescriptor(
+            DisplayName: "Neon Dodge",
+            Slug:        "neondodge",
+            Description: "Évite les voitures, camions et barils sur la route néon.",
+            Icon:        "🚗",
+            Area:        "NeonDodge"),
     };
 }
