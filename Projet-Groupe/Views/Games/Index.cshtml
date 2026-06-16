@@ -1,0 +1,21 @@
+@model IReadOnlyList<Projet_Groupe.Games.GameDescriptor>
+@{
+    ViewData["Title"] = "Jeux";
+}
+<h1>Jeux</h1>
+<div class="row">
+    @foreach (var game in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <a class="text-decoration-none text-dark"
+               asp-area="@game.Area" asp-controller="@game.Area" asp-action="Index">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@game.Icon @game.DisplayName</h5>
+                        <p class="card-text">@game.Description</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+</div>
