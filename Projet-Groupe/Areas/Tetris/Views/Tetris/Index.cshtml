@@ -309,7 +309,7 @@
                 if (!mat[r][c]) continue;
                 const nx = x + c, ny = y + r;
                 if (nx < 0 || nx >= COLS || ny >= ROWS) return false;
-                if (ny >= 0 && grid[ny][nx]) return false;
+                if (ny >= 0 && grid[ny][nx] !== null) return false;
             }
         return true;
     }
