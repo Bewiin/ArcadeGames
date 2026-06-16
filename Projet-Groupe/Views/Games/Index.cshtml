@@ -2,16 +2,22 @@
 @{
     ViewData["Title"] = "Jeux";
 }
-<h1>Jeux</h1>
-<div class="row">
+
+<div class="mb-4">
+    <h1 class="neon-blue mb-1">JEUX</h1>
+    <hr class="neon-divider" style="max-width:200px;margin-left:0;">
+</div>
+
+<div class="row g-4">
     @foreach (var game in Model)
     {
-        <div class="col-md-4 mb-4">
-            <a class="text-decoration-none text-dark"
+        <div class="col-md-4">
+            <a class="text-decoration-none"
                asp-area="@game.Area" asp-controller="@game.Area" asp-action="Index">
-                <div class="card h-100">
+                <div class="card h-100 p-1">
                     <div class="card-body">
-                        <h5 class="card-title">@game.Icon @game.DisplayName</h5>
+                        <div class="mb-2" style="font-size:2rem;">@game.Icon</div>
+                        <h5 class="card-title">@game.DisplayName</h5>
                         <p class="card-text">@game.Description</p>
                     </div>
                 </div>

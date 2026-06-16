@@ -1,31 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+:root {
+    --neon-pink:   #ff2d78;
+    --neon-blue:   #00d4ff;
+    --neon-purple: #b44fff;
+    --bg-dark:     #07070f;
+    --bg-card:     #0f0f1a;
+    --bg-nav:      #08080f;
+    --text-primary: #e8e8f0;
+    --text-muted:   #7777aa;
+    --glow-pink: 0 0 8px #ff2d78, 0 0 24px rgba(255,45,120,0.45);
+    --glow-blue: 0 0 8px #00d4ff, 0 0 24px rgba(0,212,255,0.45);
+}
+
+/* ── Base ─────────────────────────────────────── */
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    html { font-size: 16px; }
 }
 
 body {
-  margin-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Exo 2', 'Segoe UI', sans-serif;
+    background-image:
+        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* Pousse le footer en bas de page */
+body > .container {
+    flex: 1 0 auto;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* ── Typography ───────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', monospace;
+}
+
+a {
+    color: var(--neon-blue);
+}
+
+a:hover {
+    color: var(--neon-pink);
+}
+
+/* ── Navbar ───────────────────────────────────── */
+.navbar {
+    background-color: var(--bg-nav) !important;
+    border-bottom: 1px solid rgba(0,212,255,0.35) !important;
+    box-shadow: 0 2px 24px rgba(0,212,255,0.15);
+}
+
+.navbar-brand {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--neon-pink) !important;
+    text-shadow: var(--glow-pink);
+    text-transform: uppercase;
+    transition: text-shadow 0.2s;
+}
+
+.navbar-brand:hover {
+    text-shadow: var(--glow-pink), 0 0 48px rgba(255,45,120,0.55);
+}
+
+.nav-link {
+    color: var(--text-primary) !important;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: color 0.2s, text-shadow 0.2s;
+    position: relative;
+    padding-bottom: 0.35rem !important;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0.5rem;
+    right: 0.5rem;
+    height: 2px;
+    background: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--neon-blue) !important;
+    text-shadow: var(--glow-blue);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    transform: scaleX(1);
+}
+
+.navbar-toggler {
+    border-color: rgba(0,212,255,0.5);
+}
+
+.navbar-toggler-icon {
+    filter: invert(0.8) sepia(1) hue-rotate(180deg);
+}
+
+/* ── Footer ───────────────────────────────────── */
+.footer {
+    background-color: var(--bg-nav);
+    border-top: 1px solid rgba(0,212,255,0.35) !important;
+    color: var(--text-muted);
+    box-shadow: 0 -2px 20px rgba(0,212,255,0.08);
+}
+
+.footer a {
+    color: var(--neon-blue);
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: var(--neon-pink);
+    text-shadow: var(--glow-pink);
+}
+
+/* ── Cards ────────────────────────────────────── */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 10px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 24px rgba(255,45,120,0.3), 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.card-title {
+    color: var(--neon-blue);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    text-shadow: 0 0 6px rgba(0,212,255,0.5);
+}
+
+.card-text {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ── Buttons ──────────────────────────────────── */
+.btn-primary {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    border: none;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    box-shadow: var(--glow-pink);
+    transform: translateY(-2px);
+}
+
+/* ── Forms ────────────────────────────────────── */
+.form-control, .form-select {
+    background-color: #0d0d1a;
+    border-color: rgba(0,212,255,0.3);
+    color: var(--text-primary);
+    border-radius: 6px;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #0d0d1a;
+    border-color: var(--neon-blue);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0,212,255,0.2);
+}
+
+.form-label {
+    color: var(--text-primary);
+}
+
+.form-check-input {
+    background-color: #0d0d1a;
+    border-color: rgba(0,212,255,0.4);
+}
+
+.form-check-input:checked {
+    background-color: var(--neon-pink);
+    border-color: var(--neon-pink);
+}
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--text-muted);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+/* ── Alerts / validation ──────────────────────── */
+.text-danger {
+    color: var(--neon-pink) !important;
+}
+
+.validation-summary-errors ul {
+    color: var(--neon-pink);
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
+.form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem rgba(0,212,255,0.25), 0 0 0 0.25rem rgba(255,45,120,0.2);
+}
+
+/* ── Utilities ────────────────────────────────── */
+.neon-pink {
+    color: var(--neon-pink);
+    text-shadow: var(--glow-pink);
+}
+
+.neon-blue {
+    color: var(--neon-blue);
+    text-shadow: var(--glow-blue);
+}
+
+.neon-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-pink), transparent);
+    margin: 2rem 0;
+}
+
+/* ── Animations ───────────────────────────────── */
+@keyframes neon-pulse-pink {
+    0%, 100% { text-shadow: var(--glow-pink); }
+    50%       { text-shadow: 0 0 18px #ff2d78, 0 0 48px rgba(255,45,120,0.7); }
+}
+
+@keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96%           { opacity: 0.85; }
+    97%           { opacity: 1; }
+    98%           { opacity: 0.9; }
+}
+
+.neon-pulse {
+    animation: neon-pulse-pink 2.5s ease-in-out infinite;
+}
+
+.neon-flicker {
+    animation: flicker 5s infinite;
 }
