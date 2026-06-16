@@ -23,6 +23,29 @@
             inset 0 0 30px rgba(0,212,255,0.03);
         background: #07070f;
         outline: none;
+        transition: border-color 0.4s, box-shadow 0.4s;
+    }
+
+    #snkCanvas.max-speed {
+        border-color: #ff6600;
+        animation: flame-glow 0.9s ease-in-out infinite;
+    }
+
+    @@keyframes flame-glow {
+        0%, 100% {
+            box-shadow:
+                0 0 18px #ff4400,
+                0 0 40px #ff6600,
+                0 0 80px rgba(255,100,0,0.35),
+                inset 0 0 20px rgba(255,80,0,0.06);
+        }
+        50% {
+            box-shadow:
+                0 0 30px #ff7700,
+                0 0 65px #ff5500,
+                0 0 120px rgba(255,140,0,0.45),
+                inset 0 0 30px rgba(255,100,0,0.1);
+        }
     }
 
     /* ── HUD ─────────────────────────────────── */
@@ -383,10 +406,11 @@
     /* ── HUD ─────────────────────────────────────────── */
     function updateHUD() {
         document.getElementById('snkScore').textContent = score;
-        const lvl = Math.floor(score / SPD_STEP);
+        const lvl    = Math.floor(score / SPD_STEP);
         const maxLvl = Math.floor((BASE_MS - MIN_MS) / 8);
-        const pct = Math.min(100, 10 + (lvl / maxLvl) * 90);
+        const pct    = Math.min(100, 10 + (lvl / maxLvl) * 90);
         document.getElementById('snkSpeedFill').style.width = pct + '%';
+        canvas.classList.toggle('max-speed', currentSpeed() <= MIN_MS);
     }
 
     /* ── Dessin ──────────────────────────────────────── */
