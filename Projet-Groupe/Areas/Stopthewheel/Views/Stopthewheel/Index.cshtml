@@ -300,7 +300,7 @@
         animation: skull-shake 0.6s ease-in-out;
     }
 
-    @keyframes skull-shake {
+    @@keyframes skull-shake {
         0%,100% { transform: rotate(0deg) scale(1); }
         15%     { transform: rotate(-12deg) scale(1.05); }
         30%     { transform: rotate(12deg)  scale(1.05); }
@@ -345,7 +345,7 @@
         animation: rainbow-glow 1.8s linear infinite;
     }
 
-    @keyframes rainbow-glow {
+    @@keyframes rainbow-glow {
         0%   { box-shadow: 0 0 40px #ff0044, 0 0 80px rgba(255,0,68,0.2);   border-color: #ff0044; }
         16%  { box-shadow: 0 0 40px #ff8800, 0 0 80px rgba(255,136,0,0.2);  border-color: #ff8800; }
         33%  { box-shadow: 0 0 40px #ffe000, 0 0 80px rgba(255,224,0,0.2);  border-color: #ffe000; }
@@ -362,7 +362,7 @@
         filter: drop-shadow(0 0 16px rgba(255,215,0,0.8));
     }
 
-    @keyframes star-pop {
+    @@keyframes star-pop {
         0%   { transform: scale(0); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
     }
@@ -376,7 +376,7 @@
         animation: pts-grow 0.6s cubic-bezier(0.34,1.56,0.64,1);
     }
 
-    @keyframes pts-grow {
+    @@keyframes pts-grow {
         0%   { transform: scale(0.3); opacity: 0; }
         60%  { transform: scale(1.15); }
         100% { transform: scale(1);   opacity: 1; }
