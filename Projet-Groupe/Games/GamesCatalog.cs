@@ -22,5 +22,11 @@ public static class GamesCatalog
             Description: "Le classique revisité en néon. Mange, grandis, survive.",
             Icon: "🐍",
             Area: "Snake"),
+        new GameDescriptor(
+            DisplayName: "Mastermind",
+            Slug:        "mastermind",
+            Description: "Déchiffre le code secret en 10 essais.",
+            Icon:        "🔐",
+            Area:        "Mastermind"),
     };
 }

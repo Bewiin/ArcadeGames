@@ -1,0 +1,138 @@
+@model MastermindState?
+
+@{
+    ViewData["Title"] = "Mastermind";
+}
+
+<style>
+    .mm-rules { background: rgba(0,212,255,.06); border: 1px solid rgba(0,212,255,.2); border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; font-family: 'Exo 2', sans-serif; font-size: .9rem; color: var(--text-muted); }
+    .mm-rules strong { color: var(--text-primary); }
+    .mm-rules summary { color: var(--neon-blue); font-family: 'Orbitron', monospace; font-size: .75rem; letter-spacing: 1px; cursor: pointer; }
+    .mm-history { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+    .mm-history th, .mm-history td { padding: .6rem 1rem; text-align: center; border-bottom: 1px solid rgba(0,212,255,.1); }
+    .mm-history th { color: var(--neon-blue); font-family: 'Orbitron', monospace; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
+    .mm-history tr:first-child td { background: rgba(0,212,255,.05); }
+    .mm-emoji { font-size: 1.5rem; }
+    .mm-pin { font-size: 1.1rem; }
+    .mm-select { background: #0d0d1a; color: var(--text-primary); border: 1px solid rgba(0,212,255,.3); border-radius: 6px; padding: .4rem .6rem; font-family: 'Exo 2', sans-serif; font-size: 1rem; }
+    .mm-select:focus { border-color: var(--neon-blue); outline: none; box-shadow: 0 0 6px rgba(0,212,255,.4); }
+    .mm-alert { padding: 1rem 1.5rem; border-radius: 8px; font-family: 'Orbitron', monospace; font-weight: 700; letter-spacing: 1.5px; text-align: center; margin-bottom: 1.5rem; font-size: 1.1rem; }
+    .mm-alert-win  { background: rgba(0,212,255,.1);   border: 1px solid var(--neon-blue);   color: var(--neon-blue);   box-shadow: var(--glow-blue); }
+    .mm-alert-lose { background: rgba(255,45,120,.1);  border: 1px solid var(--neon-pink);   color: var(--neon-pink);   box-shadow: var(--glow-pink); }
+    .mm-alert-err  { background: rgba(180,79,255,.1);  border: 1px solid var(--neon-purple); color: var(--neon-purple); }
+    .btn-mm-start  { background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple)); color: #fff; font-family: 'Orbitron', monospace; font-size: .78rem; letter-spacing: 1.5px; text-transform: uppercase; border: none; padding: .5rem 1.2rem; border-radius: 6px; }
+    .btn-mm-guess  { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); color: #fff; font-family: 'Orbitron', monospace; font-size: .78rem; letter-spacing: 1.5px; text-transform: uppercase; border: none; padding: .5rem 1.4rem; border-radius: 6px; }
+    .mm-counter { font-family: 'Orbitron', monospace; font-size: .85rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .mm-form-label { font-family: 'Orbitron', monospace; font-size: .72rem; letter-spacing: 1px; color: var(--neon-blue); margin-bottom: .5rem; text-transform: uppercase; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+    <h1 class="neon-blue mb-0">🔐 MASTERMIND</h1>
+    <form asp-area="Mastermind" asp-controller="Mastermind" asp-action="Start" method="post">
+        <button type="submit" class="btn btn-mm-start">NOUVELLE PARTIE</button>
+    </form>
+</div>
+
+<details class="mm-rules mb-4">
+    <summary>📖 RÈGLES DU JEU</summary>
+    <div class="mt-2">
+        <p>Le serveur a choisi un <strong>code secret de 4 couleurs</strong> (les doublons sont possibles). Tu as <strong>10 essais</strong> pour le deviner.</p>
+        <p>Après chaque essai, tu reçois des indices :</p>
+        <ul>
+            <li>⚫ <strong>Pion noir</strong> = bonne couleur, <em>bonne position</em></li>
+            <li>⚪ <strong>Pion blanc</strong> = bonne couleur, <em>mauvaise position</em></li>
+        </ul>
+        <p><em>Exemple : code secret 🔴🟡🟢🔵 — essai 🔴🟢🟡🟣 → 1 noir (rouge bien placé), 2 blancs (jaune et vert présents mais mal placés).</em></p>
+    </div>
+</details>
+
+<hr class="neon-divider mb-4" />
+
+@if (TempData["MastermindError"] is string errMsg)
+{
+    <div class="mm-alert mm-alert-err mb-3">@errMsg</div>
+}
+
+@if (Model is null)
+{
+    <p class="text-center mt-4" style="color:var(--text-muted);font-family:'Exo 2',sans-serif;font-size:1.1rem;">
+        Appuie sur <strong style="color:var(--neon-pink)">NOUVELLE PARTIE</strong> pour commencer.
+    </p>
+}
+else
+{
+    @if (Model.Status == GameStatus.Won)
+    {
+        <div class="mm-alert mm-alert-win">
+            🏆 GAGNÉ EN @Model.History.Count ESSAI@(Model.History.Count > 1 ? "S" : "") !
+        </div>
+    }
+    else if (Model.Status == GameStatus.Lost)
+    {
+        <div class="mm-alert mm-alert-lose">
+            💀 PERDU ! LE CODE ÉTAIT :
+            @foreach (var c in Model.Secret)
+            {
+                <span>@MastermindConstants.ColorEmojis[c]</span>
+            }
+        </div>
+    }
+
+    @if (Model.Status == GameStatus.InProgress)
+    {
+        <div class="mm-counter">
+            Essai <strong style="color:var(--neon-blue)">@(Model.History.Count + 1)</strong> / @MastermindConstants.MaxAttempts
+        </div>
+
+        <div class="mm-form-label">Choisis tes 4 couleurs :</div>
+        <form asp-area="Mastermind" asp-controller="Mastermind" asp-action="Guess" method="post"
+              class="d-flex gap-3 align-items-center flex-wrap mb-4">
+            @for (int i = 1; i <= MastermindConstants.CodeLength; i++)
+            {
+                <select name="Color@(i)" class="mm-select" required>
+                    <option value="">Couleur @i</option>
+                    @foreach (var color in MastermindConstants.AvailableColors)
+                    {
+                        <option value="@color">@MastermindConstants.ColorEmojis[color] @color</option>
+                    }
+                </select>
+            }
+            <button type="submit" class="btn btn-mm-guess">VALIDER</button>
+        </form>
+    }
+
+    @if (Model.History.Count > 0)
+    {
+        <table class="mm-history">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th colspan="4">Ton essai</th>
+                    <th>⚫ Bien placés</th>
+                    <th>⚪ Mal placés</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = Model.History.Count - 1; i >= 0; i--)
+                {
+                    var r = Model.History[i];
+                    <tr>
+                        <td style="color:var(--text-muted);font-family:'Orbitron',monospace;font-size:.8rem">@(i + 1)</td>
+                        @foreach (var c in r.Guess)
+                        {
+                            <td><span class="mm-emoji">@MastermindConstants.ColorEmojis[c]</span></td>
+                        }
+                        <td>
+                            @for (int b = 0; b < r.BlackPins; b++) { <span class="mm-pin">⚫</span> }
+                            <strong style="color:var(--neon-blue);font-family:'Orbitron',monospace;margin-left:.3rem">@r.BlackPins</strong>
+                        </td>
+                        <td>
+                            @for (int w = 0; w < r.WhitePins; w++) { <span class="mm-pin">⚪</span> }
+                            <strong style="color:var(--neon-purple);font-family:'Orbitron',monospace;margin-left:.3rem">@r.WhitePins</strong>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
