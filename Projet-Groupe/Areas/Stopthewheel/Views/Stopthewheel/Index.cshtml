@@ -1,0 +1,603 @@
+@{
+    ViewData["Title"] = "Stop The Wheel";
+}
+
+<style>
+    /* ── Layout ─────────────────────────────── */
+    #stw-game {
+        max-width: 960px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .stw-arena {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* ── Wheel ──────────────────────────────── */
+    .stw-wheel-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stw-pointer {
+        color: #ff2d78;
+        font-size: 2.2rem;
+        text-shadow: 0 0 14px #ff2d78;
+        line-height: 1;
+        margin-bottom: -10px;
+        z-index: 2;
+        position: relative;
+    }
+
+    #stwCanvas {
+        border-radius: 50%;
+        box-shadow: 0 0 32px rgba(0,212,255,0.25), 0 0 80px rgba(0,212,255,0.08);
+    }
+
+    .stw-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem 1rem;
+        justify-content: center;
+        margin-top: 1.2rem;
+        font-family: 'Exo 2', sans-serif;
+        font-size: 0.78rem;
+        max-width: 420px;
+        color: var(--text-muted);
+    }
+
+    /* ── Lever ──────────────────────────────── */
+    .stw-lever {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        padding: 0 0.5rem;
+    }
+
+    .stw-lever-cap {
+        width: 22px;
+        height: 14px;
+        background: linear-gradient(180deg, #888, #444);
+        border-radius: 4px 4px 0 0;
+        border: 1px solid rgba(0,212,255,0.4);
+    }
+
+    .stw-lever-pole {
+        width: 10px;
+        height: 150px;
+        background: linear-gradient(90deg, #777, #bbb, #777);
+        border-radius: 5px;
+        position: relative;
+    }
+
+    .stw-lever-handle {
+        width: 38px;
+        height: 38px;
+        background: radial-gradient(circle at 38% 35%, #ff6699, #bb0033);
+        border-radius: 50%;
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 0 14px #ff2d78, 0 0 28px rgba(255,45,120,0.4);
+        transition: top 0.18s ease-in;
+        border: 2px solid rgba(255,200,200,0.25);
+    }
+
+    .stw-lever-handle.pulled {
+        top: calc(100% - 30px);
+        transition: top 0.18s ease-in;
+    }
+
+    .stw-lever-handle.returning {
+        transition: top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .stw-lever-base {
+        width: 52px;
+        height: 18px;
+        background: linear-gradient(180deg, #555, #2a2a2a);
+        border-radius: 0 0 8px 8px;
+        border: 1px solid rgba(0,212,255,0.3);
+    }
+
+    .stw-lever-label {
+        margin-top: 0.6rem;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+    }
+
+    /* ── Score Panel ────────────────────────── */
+    .stw-panel {
+        background: var(--bg-card);
+        border: 1px solid rgba(0,212,255,0.2);
+        border-radius: 14px;
+        padding: 1.5rem 1.8rem;
+        min-width: 190px;
+    }
+
+    .stw-panel-label {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.65rem;
+        letter-spacing: 3px;
+        color: var(--text-muted);
+        margin-bottom: 0.2rem;
+    }
+
+    .stw-score {
+        font-family: 'Orbitron', monospace;
+        font-size: 3.2rem;
+        font-weight: 900;
+        color: var(--neon-blue);
+        text-shadow: var(--glow-blue);
+        line-height: 1;
+        transition: color 0.3s;
+    }
+
+    .stw-score.flash-lose {
+        color: #ff2d78;
+        text-shadow: var(--glow-pink);
+    }
+
+    .stw-target-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0 0.3rem;
+        font-family: 'Exo 2', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .stw-progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid rgba(0,212,255,0.15);
+    }
+
+    .stw-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+        border-radius: 4px;
+        transition: width 0.5s ease;
+        box-shadow: 0 0 8px rgba(0,212,255,0.4);
+        width: 0%;
+    }
+
+    .stw-result-box {
+        margin-top: 1.4rem;
+        min-height: 64px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+    }
+
+    .stw-result-emoji {
+        font-size: 2.2rem;
+        line-height: 1;
+    }
+
+    .stw-result-text {
+        font-family: 'Exo 2', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        min-height: 1.2em;
+    }
+
+    /* ── Mini-game ──────────────────────────── */
+    .stw-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(7,7,15,0.94);
+        backdrop-filter: blur(6px);
+        z-index: 1000;
+        display: none;
+    }
+
+    .stw-overlay-header {
+        text-align: center;
+        padding: 2.5rem 1rem 1rem;
+    }
+
+    .stw-overlay-header h2 {
+        font-size: 1.8rem;
+        color: #FFD700;
+        text-shadow: 0 0 12px rgba(255,215,0,0.6);
+        margin-bottom: 0.5rem;
+    }
+
+    .stw-overlay-header p {
+        color: var(--text-muted);
+        font-family: 'Exo 2', sans-serif;
+    }
+
+    .stw-countdown {
+        font-family: 'Orbitron', monospace;
+        font-size: 3rem;
+        font-weight: 900;
+        color: var(--neon-pink);
+        text-shadow: var(--glow-pink);
+        margin-top: 0.5rem;
+    }
+
+    .stw-troll-btn {
+        position: absolute;
+        font-family: 'Orbitron', monospace;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        background: linear-gradient(135deg, #FFD700, #ff8800);
+        color: #000;
+        border: none;
+        border-radius: 10px;
+        padding: 1rem 2rem;
+        cursor: pointer;
+        box-shadow: 0 0 24px rgba(255,215,0,0.45);
+        transition: box-shadow 0.15s;
+        white-space: nowrap;
+    }
+
+    .stw-troll-btn:hover {
+        box-shadow: 0 0 40px rgba(255,215,0,0.7);
+    }
+
+    .stw-overlay-result {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .stw-overlay-result p {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<div id="stw-game">
+    <h1 class="neon-blue mb-0">STOP THE WHEEL</h1>
+    <hr class="neon-divider mx-auto" style="max-width:280px">
+
+    <div class="stw-arena">
+
+        <!-- Roue -->
+        <div class="stw-wheel-section">
+            <div class="stw-pointer">▼</div>
+            <canvas id="stwCanvas" width="420" height="420"></canvas>
+            <div class="stw-legend">
+                <span style="color:#c8a200">⭐ Étoile &nbsp;+100</span>
+                <span style="color:#9933ee">👑 Couronne +50</span>
+                <span style="color:#00d4ff">⚡ Éclair &nbsp;+25</span>
+                <span>💣 Bombe &nbsp;&nbsp;+0</span>
+                <span style="color:#ff2d78">💀 Crâne &nbsp;&nbsp;×0</span>
+            </div>
+        </div>
+
+        <!-- Levier -->
+        <div class="stw-lever" id="stwLever" title="Tirez le levier !">
+            <div class="stw-lever-cap"></div>
+            <div class="stw-lever-pole">
+                <div class="stw-lever-handle" id="stwHandle"></div>
+            </div>
+            <div class="stw-lever-base"></div>
+            <div class="stw-lever-label">TIRER</div>
+        </div>
+
+        <!-- Panel score -->
+        <div class="stw-panel">
+            <div class="stw-panel-label">SCORE</div>
+            <div class="stw-score" id="stwScore">0</div>
+
+            <div class="stw-target-row">
+                <span>Objectif mini-jeu</span>
+                <span style="color:var(--neon-pink);font-weight:700">500</span>
+            </div>
+            <div class="stw-progress-bar">
+                <div class="stw-progress-fill" id="stwProgress"></div>
+            </div>
+
+            <div class="stw-result-box">
+                <div class="stw-result-emoji" id="stwResultEmoji"></div>
+                <div class="stw-result-text" id="stwResultText"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Overlay mini-jeu -->
+<div class="stw-overlay" id="stwOverlay">
+    <div class="stw-overlay-header">
+        <h2 class="neon-pulse">🎉 MINI-JEU SECRET DÉBLOQUÉ !</h2>
+        <p>Clique sur le bouton pour réclamer ton bonus !</p>
+        <div class="stw-countdown" id="stwCountdown">10</div>
+    </div>
+
+    <button class="stw-troll-btn" id="stwTrollBtn">RÉCLAMER MON BONUS 🎁</button>
+
+    <div class="stw-overlay-result" id="stwOverlayResult">
+        <p id="stwOverlayMsg"></p>
+        <button class="btn btn-primary" id="stwCloseOverlay">Retour au jeu</button>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    /* ── Symboles ───────────────────────────────────── */
+    const SYM = {
+        star:  { emoji: '⭐', label: 'Étoile',   pts: 100,  color: '#7a5c00', rim: '#c8a200' },
+        crown: { emoji: '👑', label: 'Couronne',  pts: 50,   color: '#4a1580', rim: '#9933ee' },
+        bolt:  { emoji: '⚡', label: 'Éclair',    pts: 25,   color: '#005566', rim: '#00d4ff' },
+        bomb:  { emoji: '💣', label: 'Bombe',     pts: 0,    color: '#1a1a30', rim: '#444466' },
+        skull: { emoji: '💀', label: 'Crâne',     pts: null, color: '#660011', rim: '#ff2d78' },
+    };
+
+    /* 30 segments: 3 étoiles, 3 crânes, 8 couronnes, 8 éclairs, 8 bombes */
+    const segments = [
+        ...Array(3).fill('star'),
+        ...Array(3).fill('skull'),
+        ...Array(8).fill('crown'),
+        ...Array(8).fill('bolt'),
+        ...Array(8).fill('bomb'),
+    ];
+    /* Mélange Fisher-Yates */
+    for (let i = segments.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [segments[i], segments[j]] = [segments[j], segments[i]];
+    }
+
+    const N          = segments.length;         // 30
+    const SEG        = (2 * Math.PI) / N;
+    const TARGET     = 500;
+    const PROXIMITY  = 90;                      // px – distance de fuite du bouton
+
+    let angle        = 0;
+    let spinning     = false;
+    let score        = 0;
+    let mgTriggered  = false;
+
+    /* ── Canvas ─────────────────────────────────────── */
+    const canvas = document.getElementById('stwCanvas');
+    const ctx    = canvas.getContext('2d');
+    const CX     = canvas.width  / 2;
+    const CY     = canvas.height / 2;
+    const R      = CX - 14;
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        /* Halo extérieur */
+        const glow = ctx.createRadialGradient(CX, CY, R - 4, CX, CY, R + 18);
+        glow.addColorStop(0, 'rgba(0,212,255,0.28)');
+        glow.addColorStop(1, 'rgba(0,212,255,0)');
+        ctx.beginPath();
+        ctx.arc(CX, CY, R + 18, 0, 2 * Math.PI);
+        ctx.fillStyle = glow;
+        ctx.fill();
+
+        /* Segments */
+        for (let i = 0; i < N; i++) {
+            const s0  = angle + i * SEG;
+            const s1  = s0 + SEG;
+            const sym = SYM[segments[i]];
+
+            ctx.beginPath();
+            ctx.moveTo(CX, CY);
+            ctx.arc(CX, CY, R, s0, s1);
+            ctx.closePath();
+            ctx.fillStyle = sym.color;
+            ctx.fill();
+            ctx.strokeStyle = '#07070f';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            /* Emoji centré dans le segment */
+            ctx.save();
+            ctx.translate(CX, CY);
+            ctx.rotate(s0 + SEG / 2);
+            ctx.font = '13px serif';
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(sym.emoji, R * 0.72, 0);
+            ctx.restore();
+        }
+
+        /* Bordure de la roue */
+        ctx.beginPath();
+        ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#00d4ff';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+
+        /* Moyeu central */
+        ctx.beginPath();
+        ctx.arc(CX, CY, 22, 0, 2 * Math.PI);
+        ctx.fillStyle   = '#07070f';
+        ctx.fill();
+        ctx.strokeStyle = '#ff2d78';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(CX, CY, 7, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ff2d78';
+        ctx.fill();
+    }
+
+    /* ── Spin ───────────────────────────────────────── */
+    function spin() {
+        if (spinning) return;
+        spinning = true;
+
+        /* Animation du levier */
+        const handle = document.getElementById('stwHandle');
+        handle.classList.remove('returning');
+        handle.classList.add('pulled');
+        setTimeout(() => {
+            handle.classList.add('returning');
+            handle.classList.remove('pulled');
+        }, 280);
+
+        const rotations = (6 + Math.random() * 6) * 2 * Math.PI;
+        const extra     = Math.random() * 2 * Math.PI;
+        const delta     = rotations + extra;
+        const duration  = 3200 + Math.random() * 1600;
+        const t0        = performance.now();
+        const a0        = angle;
+
+        function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+        (function loop(now) {
+            const p = Math.min((now - t0) / duration, 1);
+            angle = a0 + easeOut(p) * delta;
+            draw();
+            if (p < 1) { requestAnimationFrame(loop); }
+            else { spinning = false; resolve(); }
+        })(performance.now());
+    }
+
+    /* ── Résultat ───────────────────────────────────── */
+    function resolve() {
+        /* Pointeur au sommet = angle canvas -PI/2 */
+        const ptr = -Math.PI / 2;
+        const rel = ((ptr - angle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const idx = Math.floor(rel / SEG) % N;
+        const key = segments[idx];
+        const sym = SYM[key];
+
+        if (key === 'skull') {
+            score = 0;
+            mgTriggered = false;
+            flashScore(true);
+            showResult(sym.emoji, 'CRÂNE ! Tout perdu...', '#ff2d78');
+        } else {
+            score += sym.pts;
+            const msg = sym.pts > 0
+                ? `${sym.label} ! +${sym.pts} pts`
+                : 'Bombe. +0 pt';
+            showResult(sym.emoji, msg, sym.pts > 0 ? '#00d4ff' : '#555577');
+        }
+
+        updateUI();
+
+        if (score >= TARGET && !mgTriggered) {
+            mgTriggered = true;
+            setTimeout(startMinigame, 1600);
+        }
+    }
+
+    function showResult(emoji, text, color) {
+        document.getElementById('stwResultEmoji').textContent = emoji;
+        const el = document.getElementById('stwResultText');
+        el.textContent = text;
+        el.style.color  = color;
+    }
+
+    function flashScore(lose) {
+        const el = document.getElementById('stwScore');
+        el.classList.toggle('flash-lose', lose);
+        if (lose) setTimeout(() => el.classList.remove('flash-lose'), 600);
+    }
+
+    function updateUI() {
+        document.getElementById('stwScore').textContent = score;
+        const pct = Math.min((score / TARGET) * 100, 100);
+        document.getElementById('stwProgress').style.width = pct + '%';
+    }
+
+    /* ── Mini-jeu ───────────────────────────────────── */
+    function startMinigame() {
+        const overlay  = document.getElementById('stwOverlay');
+        const btn      = document.getElementById('stwTrollBtn');
+        const countEl  = document.getElementById('stwCountdown');
+        const result   = document.getElementById('stwOverlayResult');
+
+        btn.style.display    = '';
+        result.style.display = 'none';
+        overlay.style.display = 'block';
+
+        let timeLeft = 10;
+        let ended    = false;
+
+        countEl.textContent = timeLeft;
+        placeBtn(btn);
+
+        const timer = setInterval(() => {
+            if (ended) return;
+            timeLeft--;
+            countEl.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                ended = true;
+                clearInterval(timer);
+                score = Math.max(0, score - 50);
+                updateUI();
+                endMinigame('TROP LENT ! -50 pts 😈', '#ff2d78');
+            }
+        }, 1000);
+
+        /* Fuite au survol */
+        overlay.addEventListener('mousemove', function flee(e) {
+            if (ended) return;
+            const r  = btn.getBoundingClientRect();
+            const bx = r.left + r.width  / 2;
+            const by = r.top  + r.height / 2;
+            if (Math.hypot(e.clientX - bx, e.clientY - by) < PROXIMITY) {
+                placeBtn(btn);
+            }
+        });
+
+        btn.addEventListener('click', function () {
+            if (ended) return;
+            ended = true;
+            clearInterval(timer);
+            endMinigame('BIEN JOUÉ... mais tu ne gagnes rien. 😏', '#FFD700');
+        }, { once: true });
+    }
+
+    function placeBtn(btn) {
+        const ow  = window.innerWidth;
+        const oh  = window.innerHeight;
+        const bw  = btn.offsetWidth  || 240;
+        const bh  = btn.offsetHeight || 58;
+        const hdr = 240;
+        btn.style.left = Math.max(20, 20 + Math.random() * (ow - bw - 40)) + 'px';
+        btn.style.top  = Math.max(hdr, hdr + Math.random() * (oh - bh - hdr - 20)) + 'px';
+    }
+
+    function endMinigame(msg, color) {
+        document.getElementById('stwTrollBtn').style.display = 'none';
+        const msgEl = document.getElementById('stwOverlayMsg');
+        msgEl.textContent  = msg;
+        msgEl.style.color  = color;
+        document.getElementById('stwOverlayResult').style.display = 'block';
+    }
+
+    document.getElementById('stwCloseOverlay').addEventListener('click', function () {
+        document.getElementById('stwOverlay').style.display = 'none';
+    });
+
+    /* ── Init ───────────────────────────────────────── */
+    document.getElementById('stwLever').addEventListener('click', spin);
+    draw();
+})();
+</script>
+}
