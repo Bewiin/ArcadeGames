@@ -64,11 +64,19 @@
     // ── Input ─────────────────────────────────────────────────────────────────
     window.addEventListener('keydown', e => {
         keys[e.code] = true;
-        if (e.code === 'Space')   { e.preventDefault(); handleSpace(); }
-        if (e.code === 'KeyM')    toggleMute();
+        if (e.code === 'Space')                      { e.preventDefault(); handleSpace(); }
+        if (e.key === 'm' || e.key === 'M')          toggleMute();
         if (['ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
     });
     window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    canvas.addEventListener('click', e => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = CW / rect.width;
+        const cx = (e.clientX - rect.left) * scaleX;
+        const cy = (e.clientY - rect.top)  * (CH / rect.height);
+        if (cx > CW - 50 && cy < 45) toggleMute();
+    });
 
     // ── Game control ──────────────────────────────────────────────────────────
     function handleSpace() {
