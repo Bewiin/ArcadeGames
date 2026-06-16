@@ -467,6 +467,7 @@
 
 <div id="stw-game">
     <h1 class="neon-blue mb-0">STOP THE WHEEL</h1>
+    <p style="font-family:'Exo 2',sans-serif;font-size:0.8rem;color:rgba(232,232,240,0.06);letter-spacing:3px;margin:0.1rem 0 0;">Trouve le jeu secret ...</p>
     <hr class="neon-divider mx-auto" style="max-width:280px">
 
     <div class="stw-arena">
@@ -665,6 +666,7 @@
         spinning = true;
 
         /* Animation du levier */
+        playLeverSound();
         const handle = document.getElementById('stwHandle');
         handle.classList.remove('returning');
         handle.classList.add('pulled');
@@ -677,6 +679,7 @@
         const extra     = Math.random() * 2 * Math.PI;
         const delta     = rotations + extra;
         const duration  = 3200 + Math.random() * 1600;
+        playSpinSound(duration);
         const t0        = performance.now();
         const a0        = angle;
 
@@ -692,6 +695,48 @@
     }
 
     /* ── Sons (Web Audio API) ───────────────────────── */
+    function playLeverSound() {
+        try {
+            const ac  = new AudioContext();
+            const buf = ac.createBuffer(1, ac.sampleRate * 0.12, ac.sampleRate);
+            const d   = buf.getChannelData(0);
+            for (let i = 0; i < d.length; i++) {
+                d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * 0.25));
+            }
+            const src = ac.createBufferSource();
+            src.buffer = buf;
+            const filt = ac.createBiquadFilter();
+            filt.type = 'lowpass';
+            filt.frequency.value = 350;
+            const g = ac.createGain();
+            g.gain.value = 0.45;
+            src.connect(filt); filt.connect(g); g.connect(ac.destination);
+            src.start();
+        } catch (_) {}
+    }
+
+    function playSpinSound(duration) {
+        try {
+            const ac    = new AudioContext();
+            const ticks = 32;
+            for (let i = 0; i < ticks; i++) {
+                /* Inverse de easeOut(t)=1-(1-t)^4 pour espacer les ticks comme la roue */
+                const ratio  = i / ticks;
+                const tNorm  = 1 - Math.pow(1 - ratio, 0.25);
+                const t      = ac.currentTime + (duration / 1000) * tNorm;
+                const osc    = ac.createOscillator();
+                const g      = ac.createGain();
+                osc.connect(g); g.connect(ac.destination);
+                osc.type = 'triangle';
+                osc.frequency.value = 280 + Math.random() * 80;
+                const vol = Math.max(0.015, 0.11 * (1 - ratio * 0.75));
+                g.gain.setValueAtTime(vol, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+                osc.start(t); osc.stop(t + 0.04);
+            }
+        } catch (_) {}
+    }
+
     function playDefeatSound() {
         try {
             const ac  = new AudioContext();
