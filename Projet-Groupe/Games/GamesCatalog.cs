@@ -23,10 +23,10 @@ public static class GamesCatalog
             Icon: "🐍",
             Area: "Snake"),
         new GameDescriptor(
-            DisplayName: "Mastermind",
-            Slug:        "mastermind",
-            Description: "Déchiffre le code secret en 10 essais.",
-            Icon:        "🔐",
-            Area:        "Mastermind"),
+            DisplayName: "Tetris Néon",
+            Slug: "tetris",
+            Description: "Le Tetris classique en mode néon. Alignez les lignes, montez les niveaux.",
+            Icon: "🟪",
+            Area: "Tetris"),
     };
 }

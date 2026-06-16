@@ -1,0 +1,632 @@
+@{
+    ViewData["Title"] = "Tetris Néon";
+}
+
+<style>
+    /* ── Layout ─────────────────────────────── */
+    #tet-game {
+        max-width: 680px;
+        margin: 0 auto;
+        text-align: center;
+        user-select: none;
+    }
+
+    .tet-arena {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 1.2rem;
+        margin-top: 1rem;
+    }
+
+    /* ── Canvas principal ────────────────────── */
+    .tet-canvas-wrap {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    #tetCanvas {
+        display: block;
+        border-radius: 6px;
+        border: 2px solid rgba(180,79,255,0.4);
+        box-shadow:
+            0 0 28px rgba(180,79,255,0.22),
+            0 0 70px rgba(180,79,255,0.07);
+        background: #07070f;
+        outline: none;
+    }
+
+    /* ── Overlay ────────────────────────────── */
+    .tet-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 6px;
+        background: rgba(7,7,15,0.9);
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+    }
+
+    .tet-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .tet-overlay-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: 4px;
+    }
+
+    .tet-overlay-sub {
+        font-family: 'Exo 2', sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .tet-overlay-btn {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.8rem 2rem;
+        cursor: pointer;
+        box-shadow: var(--glow-pink);
+        transition: transform 0.15s;
+        margin-top: 0.4rem;
+    }
+
+    .tet-overlay-btn:hover { transform: translateY(-2px); }
+
+    /* ── Panneaux latéraux ──────────────────── */
+    .tet-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 110px;
+    }
+
+    .tet-panel-box {
+        background: var(--bg-card);
+        border: 1px solid rgba(180,79,255,0.2);
+        border-radius: 10px;
+        padding: 0.8rem;
+        text-align: center;
+    }
+
+    .tet-label {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.55rem;
+        letter-spacing: 3px;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+    }
+
+    .tet-value {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: var(--neon-blue);
+        text-shadow: var(--glow-blue);
+        line-height: 1;
+    }
+
+    .tet-value.purple { color: #b44fff; text-shadow: 0 0 10px rgba(180,79,255,0.6); }
+    .tet-value.gold   { color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+
+    canvas.tet-mini {
+        display: block;
+        margin: 0 auto;
+        border-radius: 4px;
+        background: transparent;
+    }
+
+    /* ── Contrôles ───────────────────────────── */
+    .tet-controls {
+        margin-top: 0.8rem;
+        font-family: 'Exo 2', sans-serif;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+        line-height: 1.8;
+    }
+</style>
+
+<div id="tet-game">
+    <h1 class="mb-0" style="color:#b44fff;text-shadow:0 0 10px rgba(180,79,255,0.6);">TETRIS NÉON</h1>
+    <hr class="neon-divider mx-auto" style="max-width:240px">
+
+    <div class="tet-arena">
+
+        <!-- Panneau gauche : HOLD + NIVEAU + LIGNES -->
+        <div class="tet-panel">
+            <div class="tet-panel-box">
+                <div class="tet-label">HOLD &nbsp;[C]</div>
+                <canvas id="tetHoldCanvas" width="100" height="80" class="tet-mini"></canvas>
+            </div>
+            <div class="tet-panel-box">
+                <div class="tet-label">NIVEAU</div>
+                <div class="tet-value purple" id="tetLevel">1</div>
+            </div>
+            <div class="tet-panel-box">
+                <div class="tet-label">LIGNES</div>
+                <div class="tet-value" id="tetLines">0</div>
+            </div>
+        </div>
+
+        <!-- Canvas principal -->
+        <div class="tet-canvas-wrap">
+            <canvas id="tetCanvas" width="300" height="600" tabindex="0"></canvas>
+            <div class="tet-overlay visible" id="tetOverlay">
+                <div class="tet-overlay-title" id="tetOverlayTitle" style="color:#b44fff">TETRIS NÉON</div>
+                <div class="tet-overlay-sub" id="tetOverlaySub">Appuie sur une touche pour commencer</div>
+                <button class="tet-overlay-btn" id="tetStartBtn">▶ JOUER</button>
+            </div>
+        </div>
+
+        <!-- Panneau droit : NEXT + SCORE + MEILLEUR -->
+        <div class="tet-panel">
+            <div class="tet-panel-box">
+                <div class="tet-label">SUIVANT</div>
+                <canvas id="tetNextCanvas" width="100" height="80" class="tet-mini"></canvas>
+            </div>
+            <div class="tet-panel-box">
+                <div class="tet-label">SCORE</div>
+                <div class="tet-value" id="tetScore">0</div>
+            </div>
+            <div class="tet-panel-box">
+                <div class="tet-label">MEILLEUR</div>
+                <div class="tet-value gold" id="tetBest">0</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tet-controls">
+        ← → &nbsp;Déplacer &nbsp;|&nbsp; ↑ / X &nbsp;Rotation &nbsp;|&nbsp; ↓ &nbsp;Descente &nbsp;|&nbsp; ESPACE &nbsp;Drop &nbsp;|&nbsp; C &nbsp;Hold &nbsp;|&nbsp; P &nbsp;Pause
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    /* ── Pièces ─────────────────────────────────────── */
+    const TYPES = [
+        { color: '#00d4ff', dark: '#002233', matrix: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] }, // I
+        { color: '#FFD700', dark: '#3d2e00', matrix: [[0,1,1,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]] }, // O
+        { color: '#b44fff', dark: '#200033', matrix: [[0,1,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]] }, // T
+        { color: '#00ff88', dark: '#002211', matrix: [[0,1,1,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]] }, // S
+        { color: '#ff2d78', dark: '#330010', matrix: [[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]] }, // Z
+        { color: '#4488ff', dark: '#001133', matrix: [[1,0,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]] }, // J
+        { color: '#ff8800', dark: '#331500', matrix: [[0,0,1,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]] }, // L
+    ];
+
+    function rotateMatrix(m) {
+        const N = m.length;
+        return Array.from({ length: N }, (_, r) =>
+            Array.from({ length: N }, (_, c) => m[N - 1 - c][r]));
+    }
+
+    TYPES.forEach(t => {
+        t.rotations = [t.matrix];
+        for (let i = 0; i < 3; i++)
+            t.rotations.push(rotateMatrix(t.rotations[t.rotations.length - 1]));
+    });
+
+    /* ── Constantes ─────────────────────────────────── */
+    const COLS = 10, ROWS = 20, CELL = 30;
+    const SCORES = [0, 100, 300, 500, 800];
+
+    /* ── Canvas ─────────────────────────────────────── */
+    const canvas     = document.getElementById('tetCanvas');
+    const ctx        = canvas.getContext('2d');
+    const holdCanvas = document.getElementById('tetHoldCanvas');
+    const holdCtx    = holdCanvas.getContext('2d');
+    const nextCanvas = document.getElementById('tetNextCanvas');
+    const nextCtx    = nextCanvas.getContext('2d');
+
+    /* ── État ───────────────────────────────────────── */
+    let grid, current, held, canHold, bag, nextType;
+    let score, level, lines, state, dropTimer, clearFlash, flashText;
+
+    document.getElementById('tetBest').textContent =
+        localStorage.getItem('tet_best') || 0;
+
+    /* ── 7-bag ──────────────────────────────────────── */
+    function newBag() {
+        const b = [0,1,2,3,4,5,6];
+        for (let i = b.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [b[i], b[j]] = [b[j], b[i]];
+        }
+        return b;
+    }
+
+    function pullBag() {
+        if (!bag.length) bag = newBag();
+        return bag.pop();
+    }
+
+    /* ── Démarrage ──────────────────────────────────── */
+    function startGame() {
+        grid       = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+        bag        = newBag();
+        nextType   = pullBag();
+        held       = null;
+        canHold    = true;
+        score      = 0; level = 1; lines = 0;
+        state      = 'playing';
+        clearFlash = null;
+        flashText  = null;
+
+        hideOverlay();
+        updateHUD();
+        spawnPiece();
+
+        clearInterval(dropTimer);
+        dropTimer = setInterval(() => softDrop(false), dropSpeed());
+    }
+
+    function dropSpeed() { return Math.max(50, 800 - (level - 1) * 60); }
+
+    /* ── Spawn ──────────────────────────────────────── */
+    function spawnPiece() {
+        current = { typeIdx: nextType, rotIdx: 0, x: 3, y: -1 };
+        nextType = pullBag();
+
+        if (!isValid(current.x, current.y + 1, matrix())) {
+            state = 'gameover';
+            clearInterval(dropTimer);
+            playDie();
+            const best = Math.max(score, parseInt(localStorage.getItem('tet_best') || 0));
+            localStorage.setItem('tet_best', best);
+            document.getElementById('tetBest').textContent = best;
+            setTimeout(() => showOverlay('GAME OVER', `Score : ${score}`, '↺ REJOUER', '#ff2d78'), 500);
+            return;
+        }
+
+        canHold = true;
+        drawMini(holdCtx, holdCanvas, held);
+        drawMini(nextCtx, nextCanvas, nextType);
+        draw();
+    }
+
+    /* ── Helpers pièce ──────────────────────────────── */
+    function matrix(c = current) { return TYPES[c.typeIdx].rotations[c.rotIdx]; }
+    function color(c = current)  { return TYPES[c.typeIdx].color; }
+    function dark(c = current)   { return TYPES[c.typeIdx].dark; }
+
+    function isValid(x, y, mat) {
+        for (let r = 0; r < mat.length; r++)
+            for (let c = 0; c < mat[r].length; c++) {
+                if (!mat[r][c]) continue;
+                const nx = x + c, ny = y + r;
+                if (nx < 0 || nx >= COLS || ny >= ROWS) return false;
+                if (ny >= 0 && grid[ny][nx]) return false;
+            }
+        return true;
+    }
+
+    /* ── Ghost ──────────────────────────────────────── */
+    function ghostY() {
+        let gy = current.y;
+        while (isValid(current.x, gy + 1, matrix())) gy++;
+        return gy;
+    }
+
+    /* ── Mouvements ─────────────────────────────────── */
+    function move(dx) {
+        if (state !== 'playing' || !current) return;
+        if (isValid(current.x + dx, current.y, matrix())) {
+            current.x += dx;
+            draw();
+            playTick();
+        }
+    }
+
+    function rotate(dir) {
+        if (state !== 'playing' || !current) return;
+        const newRot = (current.rotIdx + dir + 4) % 4;
+        const mat    = TYPES[current.typeIdx].rotations[newRot];
+        for (const dx of [0, -1, 1, -2, 2]) {
+            if (isValid(current.x + dx, current.y, mat)) {
+                current.rotIdx = newRot;
+                current.x += dx;
+                draw();
+                playRotate();
+                return;
+            }
+        }
+    }
+
+    function softDrop(manual) {
+        if (state !== 'playing' || !current) return;
+        if (isValid(current.x, current.y + 1, matrix())) {
+            current.y++;
+            if (manual) { score++; updateHUD(); }
+            draw();
+        } else {
+            lock();
+        }
+    }
+
+    function hardDrop() {
+        if (state !== 'playing' || !current) return;
+        let n = 0;
+        while (isValid(current.x, current.y + 1, matrix())) { current.y++; n++; }
+        score += n * 2;
+        updateHUD();
+        playDrop();
+        lock();
+    }
+
+    function hold() {
+        if (state !== 'playing' || !current || !canHold) return;
+        canHold = false;
+        if (held === null) {
+            held = current.typeIdx;
+            spawnPiece();
+        } else {
+            const tmp = held;
+            held = current.typeIdx;
+            current = { typeIdx: tmp, rotIdx: 0, x: 3, y: -1 };
+        }
+        drawMini(holdCtx, holdCanvas, held);
+        draw();
+    }
+
+    /* ── Verrouillage ───────────────────────────────── */
+    function lock() {
+        const mat = matrix();
+        for (let r = 0; r < mat.length; r++)
+            for (let c = 0; c < mat[r].length; c++) {
+                if (!mat[r][c]) continue;
+                const ny = current.y + r;
+                if (ny < 0) return; // piece locked above visible area = game over handled in spawn
+                grid[ny][current.x + c] = current.typeIdx;
+            }
+        checkLines();
+    }
+
+    /* ── Lignes ─────────────────────────────────────── */
+    function checkLines() {
+        const full = [];
+        for (let r = 0; r < ROWS; r++)
+            if (grid[r].every(c => c !== null)) full.push(r);
+
+        if (!full.length) { spawnPiece(); return; }
+
+        /* Flash */
+        clearFlash = full;
+        draw();
+
+        if (full.length === 4) {
+            flashText = { text: 'TETRIS !', color: '#FFD700', until: Date.now() + 1200 };
+        }
+
+        setTimeout(() => {
+            full.forEach(r => { grid.splice(r, 1); grid.unshift(Array(COLS).fill(null)); });
+
+            score  += SCORES[full.length] * level;
+            lines  += full.length;
+            level   = Math.floor(lines / 10) + 1;
+            clearFlash = null;
+
+            clearInterval(dropTimer);
+            dropTimer = setInterval(() => softDrop(false), dropSpeed());
+
+            updateHUD();
+            playClear(full.length);
+            spawnPiece();
+        }, 220);
+    }
+
+    /* ── HUD ─────────────────────────────────────────── */
+    function updateHUD() {
+        document.getElementById('tetScore').textContent = score;
+        document.getElementById('tetLevel').textContent = level;
+        document.getElementById('tetLines').textContent = lines;
+    }
+
+    /* ── Overlay ─────────────────────────────────────── */
+    function showOverlay(title, sub, btn, col) {
+        document.getElementById('tetOverlayTitle').textContent = title;
+        document.getElementById('tetOverlayTitle').style.color = col || '#b44fff';
+        document.getElementById('tetOverlaySub').textContent   = sub;
+        document.getElementById('tetStartBtn').textContent     = btn;
+        document.getElementById('tetOverlay').classList.add('visible');
+    }
+
+    function hideOverlay() {
+        document.getElementById('tetOverlay').classList.remove('visible');
+    }
+
+    /* ── Dessin grille ──────────────────────────────── */
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGridLines();
+
+        /* Cellules verrouillées */
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (grid[r][c] === null) continue;
+                const flash = clearFlash && clearFlash.includes(r);
+                if (flash) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = '#ffffff';
+                    ctx.shadowBlur = 20;
+                    ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
+                    ctx.shadowBlur = 0;
+                } else {
+                    drawCell(c, r, TYPES[grid[r][c]].color, TYPES[grid[r][c]].dark);
+                }
+            }
+        }
+
+        if (current && state !== 'gameover') {
+            /* Ghost */
+            const gy  = ghostY();
+            const mat = matrix();
+            for (let r = 0; r < mat.length; r++)
+                for (let c = 0; c < mat[r].length; c++) {
+                    if (!mat[r][c] || current.y + r < 0) continue;
+                    const gr = gy + r;
+                    if (gr >= 0) {
+                        ctx.strokeStyle = color();
+                        ctx.lineWidth   = 1;
+                        ctx.globalAlpha = 0.22;
+                        ctx.beginPath();
+                        ctx.roundRect(current.x * CELL + c * CELL + 1, gr * CELL + 1, CELL - 2, CELL - 2, 3);
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+
+            /* Pièce courante */
+            for (let r = 0; r < mat.length; r++)
+                for (let c = 0; c < mat[r].length; c++) {
+                    if (!mat[r][c]) continue;
+                    const pr = current.y + r;
+                    if (pr >= 0) drawCell(current.x + c, pr, color(), dark());
+                }
+        }
+
+        /* Flash "TETRIS !" */
+        if (flashText && Date.now() < flashText.until) {
+            ctx.font      = 'bold 28px Orbitron, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = flashText.color;
+            ctx.shadowColor = flashText.color;
+            ctx.shadowBlur  = 20;
+            ctx.fillText(flashText.text, canvas.width / 2, canvas.height / 2);
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    function drawGridLines() {
+        ctx.strokeStyle = 'rgba(180,79,255,0.06)';
+        ctx.lineWidth   = 0.5;
+        for (let c = 0; c <= COLS; c++) {
+            ctx.beginPath(); ctx.moveTo(c * CELL, 0); ctx.lineTo(c * CELL, ROWS * CELL); ctx.stroke();
+        }
+        for (let r = 0; r <= ROWS; r++) {
+            ctx.beginPath(); ctx.moveTo(0, r * CELL); ctx.lineTo(COLS * CELL, r * CELL); ctx.stroke();
+        }
+    }
+
+    function drawCell(cx, cy, col, dk) {
+        const x = cx * CELL + 1, y = cy * CELL + 1, s = CELL - 2;
+        ctx.fillStyle = dk;
+        ctx.beginPath(); ctx.roundRect(x, y, s, s, 3); ctx.fill();
+        ctx.shadowColor = col; ctx.shadowBlur = 14;
+        ctx.fillStyle   = col;
+        ctx.beginPath(); ctx.roundRect(x + 2, y + 2, s - 4, s - 4, 2); ctx.fill();
+        ctx.shadowBlur  = 0;
+        ctx.fillStyle   = 'rgba(255,255,255,0.18)';
+        ctx.beginPath(); ctx.roundRect(x + 3, y + 3, s - 10, 4, 1); ctx.fill();
+    }
+
+    /* ── Mini canvas (hold / next) ──────────────────── */
+    function drawMini(mCtx, mCanvas, typeIdx) {
+        mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height);
+        if (typeIdx === null || typeIdx === undefined) return;
+        const t   = TYPES[typeIdx];
+        const mat = t.rotations[0];
+        const MC  = 18;
+        let minR = 4, maxR = 0, minC = 4, maxC = 0;
+        mat.forEach((row, r) => row.forEach((v, c) => {
+            if (v) { minR = Math.min(minR,r); maxR = Math.max(maxR,r); minC = Math.min(minC,c); maxC = Math.max(maxC,c); }
+        }));
+        const pw = (maxC - minC + 1) * MC, ph = (maxR - minR + 1) * MC;
+        const ox = (mCanvas.width - pw) / 2, oy = (mCanvas.height - ph) / 2;
+        for (let r = minR; r <= maxR; r++)
+            for (let c = minC; c <= maxC; c++) {
+                if (!mat[r][c]) continue;
+                const px = ox + (c - minC) * MC, py = oy + (r - minR) * MC;
+                mCtx.fillStyle = t.dark;
+                mCtx.beginPath(); mCtx.roundRect(px, py, MC - 1, MC - 1, 2); mCtx.fill();
+                mCtx.shadowColor = t.color; mCtx.shadowBlur = 10;
+                mCtx.fillStyle   = t.color;
+                mCtx.beginPath(); mCtx.roundRect(px + 2, py + 2, MC - 5, MC - 5, 1); mCtx.fill();
+                mCtx.shadowBlur  = 0;
+            }
+    }
+
+    /* ── Audio ──────────────────────────────────────── */
+    let _ac = null;
+    async function getAC() {
+        if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+        if (_ac.state !== 'running') await _ac.resume();
+        return _ac;
+    }
+    async function beep(freq, type, vol, dur, freqEnd) {
+        try {
+            const ac = await getAC(), now = ac.currentTime;
+            const osc = ac.createOscillator(), g = ac.createGain();
+            osc.connect(g); g.connect(ac.destination);
+            osc.type = type; osc.frequency.setValueAtTime(freq, now);
+            if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, now + dur);
+            g.gain.setValueAtTime(vol, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+            osc.start(now); osc.stop(now + dur + 0.01);
+        } catch(_) {}
+    }
+    function playTick()   { beep(180, 'sine',     0.05, 0.04); }
+    function playRotate() { beep(300, 'sine',     0.09, 0.07, 480); }
+    function playDrop()   { beep(140, 'sine',     0.22, 0.1,  60); }
+    function playDie()    { beep(300, 'sawtooth', 0.3,  0.8,  60); }
+    async function playClear(n) {
+        try {
+            const ac = await getAC(), now = ac.currentTime;
+            const freqs = n >= 4 ? [660,880,1100,1320] : n === 3 ? [440,660,880] : n === 2 ? [440,660] : [440];
+            freqs.forEach((f, i) => {
+                const osc = ac.createOscillator(), g = ac.createGain();
+                osc.connect(g); g.connect(ac.destination);
+                osc.type = 'sine'; osc.frequency.value = f;
+                g.gain.setValueAtTime(0.22, now + i*0.08);
+                g.gain.exponentialRampToValueAtTime(0.001, now + i*0.08 + 0.15);
+                osc.start(now + i*0.08); osc.stop(now + i*0.08 + 0.16);
+            });
+        } catch(_) {}
+    }
+
+    /* ── Contrôles ───────────────────────────────────── */
+    document.addEventListener('keydown', e => {
+        if (state === 'idle' || state === 'gameover') {
+            if ([' ','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+                e.preventDefault(); startGame();
+            }
+            return;
+        }
+        if (e.key === 'p' || e.key === 'P') {
+            state = state === 'playing' ? 'paused' : 'playing'; return;
+        }
+        if (state !== 'playing') return;
+        switch (e.key) {
+            case 'ArrowLeft':  e.preventDefault(); move(-1);       break;
+            case 'ArrowRight': e.preventDefault(); move(1);        break;
+            case 'ArrowDown':  e.preventDefault(); softDrop(true); break;
+            case 'ArrowUp': case 'x': case 'X': e.preventDefault(); rotate(1);  break;
+            case 'z': case 'Z':                  e.preventDefault(); rotate(-1); break;
+            case ' ':          e.preventDefault(); hardDrop();     break;
+            case 'c': case 'C': e.preventDefault(); hold();        break;
+        }
+    });
+
+    document.getElementById('tetStartBtn').addEventListener('click', startGame);
+
+    /* ── Init ────────────────────────────────────────── */
+    state = 'idle';
+    draw();
+    drawMini(holdCtx, holdCanvas, null);
+    drawMini(nextCtx, nextCanvas, null);
+})();
+</script>
+}
