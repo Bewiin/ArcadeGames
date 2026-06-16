@@ -586,10 +586,11 @@
                 .sort((a, b) => b[1] - a[1] || Math.random() - 0.5);
 
             /* Fallback si contrainte circulaire impossible à tenir */
-            const [chosen] = candidates.length > 0
+            const pool = candidates.length > 0
                 ? candidates
                 : Object.entries(counts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
 
+            const [[chosen]] = pool;
             result.push(chosen);
             counts[chosen]--;
         }
