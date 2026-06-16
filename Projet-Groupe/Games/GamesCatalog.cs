@@ -10,5 +10,11 @@ public static class GamesCatalog
             Description: "Jeu exemple à cloner pour créer un nouveau jeu.",
             Icon: "🎮",
             Area: "Demo"),
+        new GameDescriptor(
+            DisplayName: "Mastermind",
+            Slug:        "mastermind",
+            Description: "Déchiffre le code secret en 10 essais.",
+            Icon:        "🔐",
+            Area:        "Mastermind"),
     };
 }
