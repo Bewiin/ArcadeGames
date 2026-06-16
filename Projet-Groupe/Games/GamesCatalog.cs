@@ -28,5 +28,11 @@ public static class GamesCatalog
             Description: "Déchiffre le code secret en 10 essais.",
             Icon:        "🔐",
             Area:        "Mastermind"),
+        new GameDescriptor(
+            DisplayName: "Neon Dodge",
+            Slug:        "neondodge",
+            Description: "Évite les voitures, camions et barils sur la route néon.",
+            Icon:        "🚗",
+            Area:        "NeonDodge"),
     };
 }
