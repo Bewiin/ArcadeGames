@@ -16,6 +16,13 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// Crée la BDD et applique les migrations automatiquement au démarrage
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<Projet_Groupe.Data.ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
