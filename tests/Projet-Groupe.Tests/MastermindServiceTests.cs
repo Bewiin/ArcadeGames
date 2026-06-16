@@ -114,4 +114,47 @@ public class MastermindServiceTests
         Assert.Equal(MastermindConstants.CodeLength, secret.Length);
         Assert.All(secret, c => Assert.Contains(c, MastermindConstants.AvailableColors));
     }
+
+    [Fact]
+    public void ResolveStatus_9Essais_RetourneInProgress()
+    {
+        var history = Enumerable.Range(0, MastermindConstants.MaxAttempts - 1)
+            .Select(_ => new GuessResult { Guess = ["Bleu", "Bleu", "Bleu", "Bleu"], BlackPins = 0, WhitePins = 0 })
+            .ToList();
+
+        var state = new MastermindState
+        {
+            Secret  = ["Rouge", "Jaune", "Vert", "Orange"],
+            History = history,
+            Status  = GameStatus.InProgress,
+        };
+
+        var status = _sut.ResolveStatus(state);
+
+        Assert.Equal(GameStatus.InProgress, status);
+    }
+
+    [Fact]
+    public void GenerateSecret_PlusieursAppels_PeutProduireDesDoublons()
+    {
+        // Vérifie que le secret autorise les répétitions (comportement voulu du jeu)
+        bool hasDoublon = false;
+        for (int i = 0; i < 200 && !hasDoublon; i++)
+        {
+            var secret = _sut.GenerateSecret();
+            hasDoublon = secret.Length != secret.Distinct().Count();
+        }
+        Assert.True(hasDoublon, "Après 200 appels, au moins un secret avec doublon devrait apparaître.");
+    }
+
+    [Fact]
+    public void Evaluate_GuessIdentique_RetourneGuessPreserve()
+    {
+        string[] secret = ["Rouge", "Jaune", "Vert", "Bleu"];
+        string[] guess  = ["Rouge", "Jaune", "Vert", "Bleu"];
+
+        var result = _sut.Evaluate(secret, guess);
+
+        Assert.Equal(guess, result.Guess);
+    }
 }
