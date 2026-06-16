@@ -49,7 +49,7 @@
         margin-top: 1.2rem;
         font-family: 'Exo 2', sans-serif;
         font-size: 0.78rem;
-        max-width: 420px;
+        max-width: 560px;
         color: var(--text-muted);
     }
 
@@ -60,58 +60,98 @@
         align-items: center;
         cursor: pointer;
         user-select: none;
-        padding: 0 0.5rem;
+        padding: 0 1rem;
     }
 
-    .stw-lever-cap {
-        width: 22px;
-        height: 14px;
-        background: linear-gradient(180deg, #888, #444);
-        border-radius: 4px 4px 0 0;
-        border: 1px solid rgba(0,212,255,0.4);
+    /* L'assemblage entier pivote autour de son bas */
+    .stw-lever-assembly {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform-origin: bottom center;
+        transition: transform 0.18s ease-in;
+        will-change: transform;
     }
 
-    .stw-lever-pole {
-        width: 10px;
-        height: 150px;
-        background: linear-gradient(90deg, #777, #bbb, #777);
-        border-radius: 5px;
-        position: relative;
+    .stw-lever-assembly.pulled {
+        transform: rotate(32deg);
     }
 
-    .stw-lever-handle {
-        width: 38px;
-        height: 38px;
-        background: radial-gradient(circle at 38% 35%, #ff6699, #bb0033);
+    .stw-lever-assembly.returning {
+        transform: rotate(0deg);
+        transition: transform 0.5s cubic-bezier(0.34, 1.45, 0.64, 1);
+    }
+
+    /* Bille 3D */
+    .stw-lever-ball {
+        width: 54px;
+        height: 54px;
         border-radius: 50%;
-        position: absolute;
-        top: -8px;
-        left: 50%;
-        transform: translateX(-50%);
-        box-shadow: 0 0 14px #ff2d78, 0 0 28px rgba(255,45,120,0.4);
-        transition: top 0.18s ease-in;
-        border: 2px solid rgba(255,200,200,0.25);
+        flex-shrink: 0;
+        background: radial-gradient(circle at 35% 28%,
+            #ffaacc 0%,
+            #ee1155 38%,
+            #7a0018 80%,
+            #3a0008 100%);
+        box-shadow:
+            inset -5px -5px 12px rgba(0,0,0,0.6),
+            inset  3px  3px  8px rgba(255,180,200,0.3),
+            0 0 22px rgba(255,45,120,0.65),
+            0 6px 14px rgba(0,0,0,0.55);
+        border: 1px solid rgba(255,130,160,0.2);
+        margin-bottom: -1px;
     }
 
-    .stw-lever-handle.pulled {
-        top: calc(100% - 30px);
-        transition: top 0.18s ease-in;
+    /* Tige chromée */
+    .stw-lever-pole {
+        width: 14px;
+        height: 170px;
+        flex-shrink: 0;
+        background: linear-gradient(90deg,
+            #111  0%,
+            #555 15%,
+            #bbb 33%,
+            #eee 50%,
+            #bbb 67%,
+            #555 85%,
+            #111 100%);
+        border-radius: 7px;
+        box-shadow:
+            3px 0 8px rgba(0,0,0,0.45),
+            -1px 0 3px rgba(255,255,255,0.07);
     }
 
-    .stw-lever-handle.returning {
-        transition: top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
+    /* Socle */
     .stw-lever-base {
-        width: 52px;
+        width: 72px;
+        height: 24px;
+        background: linear-gradient(180deg, #5c5c5c 0%, #2e2e2e 55%, #111 100%);
+        border-radius: 6px;
+        box-shadow:
+            0 5px 12px rgba(0,0,0,0.75),
+            inset 0  1px 0 rgba(255,255,255,0.13),
+            inset 0 -1px 0 rgba(0,0,0,0.4);
+        border: 1px solid rgba(0,212,255,0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Axe central du socle */
+    .stw-lever-pivot {
+        width: 18px;
         height: 18px;
-        background: linear-gradient(180deg, #555, #2a2a2a);
-        border-radius: 0 0 8px 8px;
-        border: 1px solid rgba(0,212,255,0.3);
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #aaa, #555, #222);
+        box-shadow:
+            inset -2px -2px 5px rgba(0,0,0,0.6),
+            inset  1px  1px 3px rgba(255,255,255,0.15);
     }
 
     .stw-lever-label {
-        margin-top: 0.6rem;
+        margin-top: 0.7rem;
         font-family: 'Orbitron', monospace;
         font-size: 0.6rem;
         letter-spacing: 2px;
@@ -281,7 +321,7 @@
         <!-- Roue -->
         <div class="stw-wheel-section">
             <div class="stw-pointer">▼</div>
-            <canvas id="stwCanvas" width="420" height="420"></canvas>
+            <canvas id="stwCanvas" width="560" height="560"></canvas>
             <div class="stw-legend">
                 <span style="color:#c8a200">⭐ Étoile &nbsp;+100</span>
                 <span style="color:#9933ee">👑 Couronne +50</span>
@@ -293,11 +333,13 @@
 
         <!-- Levier -->
         <div class="stw-lever" id="stwLever" title="Tirez le levier !">
-            <div class="stw-lever-cap"></div>
-            <div class="stw-lever-pole">
-                <div class="stw-lever-handle" id="stwHandle"></div>
+            <div class="stw-lever-assembly" id="stwHandle">
+                <div class="stw-lever-ball"></div>
+                <div class="stw-lever-pole"></div>
             </div>
-            <div class="stw-lever-base"></div>
+            <div class="stw-lever-base">
+                <div class="stw-lever-pivot"></div>
+            </div>
             <div class="stw-lever-label">TIRER</div>
         </div>
 
@@ -414,7 +456,7 @@
             ctx.save();
             ctx.translate(CX, CY);
             ctx.rotate(s0 + SEG / 2);
-            ctx.font = '13px serif';
+            ctx.font = '18px serif';
             ctx.textAlign    = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(sym.emoji, R * 0.72, 0);
