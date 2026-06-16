@@ -89,7 +89,7 @@ else
               class="d-flex gap-3 align-items-center flex-wrap mb-4">
             @for (int i = 1; i <= MastermindConstants.CodeLength; i++)
             {
-                <select name="Color@i" class="mm-select" required>
+                <select name="Color@(i)" class="mm-select" required>
                     <option value="">Couleur @i</option>
                     @foreach (var color in MastermindConstants.AvailableColors)
                     {
