@@ -568,19 +568,35 @@
         skull: { emoji: '💀', label: 'Crâne',     pts: null, color: '#660011', rim: '#ff2d78' },
     };
 
-    /* 30 segments: 3 étoiles, 3 crânes, 8 couronnes, 8 éclairs, 8 bombes */
-    const segments = [
-        ...Array(3).fill('star'),
-        ...Array(3).fill('skull'),
-        ...Array(8).fill('crown'),
-        ...Array(8).fill('bolt'),
-        ...Array(8).fill('bomb'),
-    ];
-    /* Mélange Fisher-Yates */
-    for (let i = segments.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [segments[i], segments[j]] = [segments[j], segments[i]];
+    /* 30 segments: 3 étoiles, 3 crânes, 8 couronnes, 8 éclairs, 8 bombes
+       Disposition gloutonne : évite au maximum les symboles adjacents identiques */
+    function buildWheel() {
+        const counts = { star: 3, skull: 3, crown: 8, bolt: 8, bomb: 8 };
+        const result = [];
+
+        for (let i = 0; i < 30; i++) {
+            const prev  = result[result.length - 1] ?? null;
+            const first = result[0] ?? null;
+            const isLast = i === 29;
+
+            /* Candidats triés par fréquence décroissante, excluant le précédent
+               et, sur la dernière case, excluant aussi le premier (fermeture du cercle) */
+            const candidates = Object.entries(counts)
+                .filter(([k, v]) => v > 0 && k !== prev && !(isLast && k === first))
+                .sort((a, b) => b[1] - a[1] || Math.random() - 0.5);
+
+            /* Fallback si contrainte circulaire impossible à tenir */
+            const [chosen] = candidates.length > 0
+                ? candidates
+                : Object.entries(counts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+
+            result.push(chosen);
+            counts[chosen]--;
+        }
+        return result;
     }
+
+    const segments = buildWheel();
 
     const N          = segments.length;         // 30
     const SEG        = (2 * Math.PI) / N;
