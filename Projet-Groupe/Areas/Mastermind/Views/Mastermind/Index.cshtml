@@ -14,14 +14,14 @@
     .mm-alert { padding: 1rem 1.5rem; border-radius: 8px; font-family: 'Orbitron', monospace; font-weight: 700; letter-spacing: 1.5px; text-align: center; margin-bottom: 1.5rem; font-size: 1.1rem; }
     .mm-alert-win  { background: rgba(0,212,255,.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); box-shadow: var(--glow-blue); }
     .mm-alert-lose { background: rgba(255,45,120,.1);  border: 1px solid var(--neon-pink); color: var(--neon-pink); box-shadow: var(--glow-pink); }
+    .btn-mm-primary { background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple)); color: #fff; font-family: 'Orbitron', monospace; font-size: .78rem; letter-spacing: 1.5px; text-transform: uppercase; border: none; padding: .5rem 1.2rem; border-radius: 6px; }
+    .btn-mm-secondary { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); color: #fff; font-family: 'Orbitron', monospace; font-size: .78rem; letter-spacing: 1.5px; text-transform: uppercase; border: none; padding: .5rem 1.4rem; border-radius: 6px; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <h1 class="neon-blue mb-0">🔐 MASTERMIND</h1>
     <form asp-area="Mastermind" asp-controller="Mastermind" asp-action="Start" method="post">
-        <button type="submit" class="btn" style="background:linear-gradient(135deg,var(--neon-pink),var(--neon-purple));color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;border:none;padding:.5rem 1.2rem;border-radius:6px;">
-            NOUVELLE PARTIE
-        </button>
+        <button type="submit" class="btn btn-mm-primary">NOUVELLE PARTIE</button>
     </form>
 </div>
 
@@ -85,7 +85,7 @@ else
                             <strong style="color:var(--neon-blue);">@r.BlackPins</strong>
                         </td>
                         <td>
-                            <strong style="color:var(--text-muted);">@r.WhitePins</strong>
+                            <strong style="color:var(--neon-purple);">@r.WhitePins</strong>
                         </td>
                     </tr>
                 }
@@ -107,10 +107,7 @@ else
                     }
                 </select>
             }
-            <button type="submit" class="btn"
-                    style="background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;border:none;padding:.5rem 1.4rem;border-radius:6px;">
-                VALIDER
-            </button>
+            <button type="submit" class="btn btn-mm-secondary">VALIDER</button>
         </form>
     }
 }
