@@ -695,9 +695,16 @@
     }
 
     /* ── Sons (Web Audio API) ───────────────────────── */
+    let _ac = null;
+    function getAC() {
+        if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+        if (_ac.state === 'suspended') _ac.resume();
+        return _ac;
+    }
+
     function playLeverSound() {
         try {
-            const ac  = new AudioContext();
+            const ac  = getAC();
             const buf = ac.createBuffer(1, ac.sampleRate * 0.12, ac.sampleRate);
             const d   = buf.getChannelData(0);
             for (let i = 0; i < d.length; i++) {
@@ -717,7 +724,7 @@
 
     function playSpinSound(duration) {
         try {
-            const ac    = new AudioContext();
+            const ac    = getAC();
             const ticks = 32;
             for (let i = 0; i < ticks; i++) {
                 /* Inverse de easeOut(t)=1-(1-t)^4 pour espacer les ticks comme la roue */
@@ -739,7 +746,7 @@
 
     function playDefeatSound() {
         try {
-            const ac  = new AudioContext();
+            const ac  = getAC();
             const osc = ac.createOscillator();
             const g   = ac.createGain();
             osc.connect(g); g.connect(ac.destination);
@@ -754,7 +761,7 @@
 
     function playCoinsSound() {
         try {
-            const ac = new AudioContext();
+            const ac = getAC();
             for (let i = 0; i < 10; i++) {
                 const osc = ac.createOscillator();
                 const g   = ac.createGain();
