@@ -16,5 +16,11 @@ public static class GamesCatalog
             Description: "Tirez le levier, arrêtez la roue et accumulez des points. Attention au crâne !",
             Icon: "🎡",
             Area: "Stopthewheel"),
+        new GameDescriptor(
+            DisplayName: "Snake Néon",
+            Slug: "snake",
+            Description: "Le classique revisité en néon. Mange, grandis, survive.",
+            Icon: "🐍",
+            Area: "Snake"),
     };
 }
