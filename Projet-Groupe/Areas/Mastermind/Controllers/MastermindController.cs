@@ -33,6 +33,9 @@ public class MastermindController : Controller
         if (state is null || state.Status != GameStatus.InProgress)
             return RedirectToAction(nameof(Index));
 
+        if (!ModelState.IsValid)
+            return RedirectToAction(nameof(Index));
+
         var guess = vm.ToArray();
         if (!guess.All(c => MastermindConstants.AvailableColors.Contains(c)))
             return RedirectToAction(nameof(Index));
